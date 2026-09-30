@@ -1,17 +1,31 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerNetwork : MonoBehaviour
+public class PlayerNetwork : NetworkBehaviour
 {
-    private void Update()
+    public float moveSpeed = 5f;
+
+    private NetworkVariable<int> randomNumber = new NetworkVariable<int>(1);
+
+    void Update()
     {
-        Vector3 moveDir = new Vector3(0, 0, 0);
+        if (!IsOwner) return;
 
-        if (Input.GetKeyDown(KeyCode.W)) moveDir.z = +1f;
-        if (Input.GetKeyDown(KeyCode.S)) moveDir.z = -1f;
-        if (Input.GetKeyDown(KeyCode.A)) moveDir.x = -1f;
-        if (Input.GetKeyDown(KeyCode.D)) moveDir.x = +1f;
+        float moveX = 0f;
+        float moveY = 0f;
 
-        float moveSpeed = 3f;
-        transform.position += moveDir * Time.deltaTime;
+        if (Input.GetKey(KeyCode.W)) moveY = 1f;
+        else if (Input.GetKey(KeyCode.S)) moveY = -1f;
+
+        if (Input.GetKey(KeyCode.D)) moveX = 1f;
+        else if (Input.GetKey(KeyCode.A)) moveX = -1f;
+
+        Vector3 moveDirection = new Vector3(moveX, moveY, 0).normalized;
+        transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
+
+        if (moveX > 0)
+            transform.localScale = new Vector3(1, 1, 1);
+        else if (moveX < 0)
+            transform.localScale = new Vector3(-1, 1, 1);
     }
 }
