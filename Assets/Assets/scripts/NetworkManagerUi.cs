@@ -1,26 +1,33 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class NetworkManagerUi : MonoBehaviour
 {
-    [SerializeField] private Button ServerBtn;
+    
     [SerializeField] private Button HostBtn;
     [SerializeField] private Button ClientBtn;
+    [SerializeField] private TMP_InputField joinCodeInput;
+    [SerializeField] private TMP_Text joinCodeText;
 
     private void Awake()
     {
-        ServerBtn.onClick.AddListener(() =>
+
+        HostBtn.onClick.AddListener(async () =>
         {
-            NetworkManager.Singleton.StartServer();
+            string joinCode = await TestRelay.Instance.CreateRelay();
+
+            if (joinCode != null)
+            {
+                joinCodeText.text = "Code: " + joinCode;
+                GUIUtility.systemCopyBuffer = joinCode;
+            }
         });
-        HostBtn.onClick.AddListener(() =>
-        {
-            NetworkManager.Singleton.StartHost();
-        });
+
         ClientBtn.onClick.AddListener(() =>
         {
-            NetworkManager.Singleton.StartClient();
+            TestRelay.Instance.JoinRelay(joinCodeInput.text);
         });
     }
 }
