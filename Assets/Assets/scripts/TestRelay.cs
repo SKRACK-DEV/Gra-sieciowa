@@ -6,10 +6,13 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
 public class TestRelay : MonoBehaviour
 {
     public static TestRelay Instance { get; private set; }
+    public static string LastJoinCode; 
+    
 
     private void Awake()
     {
@@ -39,6 +42,10 @@ public class TestRelay : MonoBehaviour
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
             Debug.Log(joinCode);
+            
+            LastJoinCode = joinCode;  
+            
+            await LobbyHelper.Instance.CreateLobby(joinCode);
 
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetHostRelayData(
                 allocation.RelayServer.IpV4,
@@ -50,6 +57,8 @@ public class TestRelay : MonoBehaviour
                 );
 
             NetworkManager.Singleton.StartHost();
+            
+            NetworkManager.Singleton.SceneManager.LoadScene("lobby", LoadSceneMode.Single);
 
             return joinCode;
 
@@ -82,5 +91,6 @@ public class TestRelay : MonoBehaviour
         {
             Debug.Log(e);
         }
+        
     }
 }

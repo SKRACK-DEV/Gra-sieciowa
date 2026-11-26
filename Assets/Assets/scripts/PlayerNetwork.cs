@@ -1,69 +1,19 @@
-using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerNetwork : NetworkBehaviour
 {
-
-    [SerializeField] private Transform spawnCoinPrefab;
-
     public float moveSpeed = 5f;
 
-    private NetworkVariable<MyCustomData> randomNumber = new NetworkVariable<MyCustomData>(
-        new MyCustomData { 
-
-            _int = 67,
-            _bool = true,
-        
-        }, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-            
-
-    public struct  MyCustomData : INetworkSerializable
+    private void Update()
     {
-        public int _int;
-        public bool _bool;
-        public FixedString128Bytes message;
-
-        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-        {
-            serializer.SerializeValue(ref _int);
-            serializer.SerializeValue(ref _bool);
-            serializer.SerializeValue(ref message);
-        }
-    }
-
-    public override void OnNetworkSpawn()
-    {
-        randomNumber.OnValueChanged += (MyCustomData previousValue, MyCustomData newValue) => {
-
-            Debug.Log(OwnerClientId + "; random number: " + newValue._int + "; " + newValue._bool + "; " + newValue.message);
-
-        };
-        
-    }
-
-    void Update()
-
-    {
-        
-
         if (!IsOwner) return;
 
-        if (Input.GetKeyUp(KeyCode.T))
-        {
+        // po za gierkom gracz sb nie rusza
+        //przy okazji usunięto cały stuff z tutoriala bo już nie jest potrzebny
+        
+        if (GameManager.Instance == null || !GameManager.Instance.IsPlaying.Value) return;
 
-            Transform CoinTransform = Instantiate(spawnCoinPrefab);
-            CoinTransform.GetComponent<NetworkObject>().Spawn(true);
-
-            //randomNumber.Value = new MyCustomData
-            /* {
-                _int = 10,
-                _bool = false,
-                message = "skibidi 67"
-
-            };
-            */
-        }
         float moveX = 0f;
         float moveY = 0f;
 
@@ -76,6 +26,16 @@ public class PlayerNetwork : NetworkBehaviour
         Vector3 moveDirection = new Vector3(moveX, moveY, 0).normalized;
         transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
 
+        //blokowanie gracza co by nie zwial za arene
+        
+        
+        Vector2 half = GameManager.Instance.AreaSize / 2f;
+        Vector3 p = transform.position;
+        p.x = Mathf.Clamp(p.x, -half.x, half.x);
+        p.y = Mathf.Clamp(p.y, -half.y, half.y);
+        transform.position = p;
+
+        
         if (moveX > 0)
             transform.localScale = new Vector3(1, 1, 1);
         else if (moveX < 0)
